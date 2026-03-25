@@ -9,48 +9,53 @@ import java.util.List;
  */
 public class RollHistory {
 
-	private List<RollResult> history;
+    private List<RollResult> history;
 
-	public RollHistory() {
-		history = new ArrayList<>();
-	}
+    public RollHistory() {
+        history = new ArrayList<>();
+    }
 
-	public void addResult(RollResult result) {
-		history.add(result);
-	}
+    public void addResult(RollResult result) {
+        history.add(result);
+    }
 
-	public List<RollResult> getHistory() {
-		return new ArrayList<>(history);
-	}
+    public List<RollResult> getHistory() {
+        return new ArrayList<>(history);
+    }
 
-	public RollResult getLastResult() {
-		if (history.isEmpty()) return null;
-		return history.get(history.size() - 1);
-	}
+    /** Replaces the internal list — used when loading from disk. */
+    public void setHistory(List<RollResult> loaded) {
+        history = new ArrayList<>(loaded);
+    }
 
-	public int getRollCount() {
-		return history.size();
-	}
+    public RollResult getLastResult() {
+        if (history.isEmpty()) return null;
+        return history.get(history.size() - 1);
+    }
 
-	public int getMin() {
-		return history.stream().mapToInt(RollResult::getTotal).min().orElse(0);
-	}
+    public int getRollCount() {
+        return history.size();
+    }
 
-	public int getMax() {
-		return history.stream().mapToInt(RollResult::getTotal).max().orElse(0);
-	}
+    public int getMin() {
+        return history.stream().mapToInt(RollResult::getTotal).min().orElse(0);
+    }
 
-	public double getAverage() {
-		return history.stream().mapToInt(RollResult::getTotal).average().orElse(0.0);
-	}
+    public int getMax() {
+        return history.stream().mapToInt(RollResult::getTotal).max().orElse(0);
+    }
 
-	public void clear() {
-		history.clear();
-	}
+    public double getAverage() {
+        return history.stream().mapToInt(RollResult::getTotal).average().orElse(0.0);
+    }
 
-	public String getStatsString() {
-		if (history.isEmpty()) return "No rolls yet";
-		return String.format("Rolls: %d  |  Min: %d  |  Max: %d  |  Avg: %.1f",
-			getRollCount(), getMin(), getMax(), getAverage());
-	}
+    public void clear() {
+        history.clear();
+    }
+
+    public String getStatsString() {
+        if (history.isEmpty()) return "No rolls yet";
+        return String.format("Rolls: %d  |  Min: %d  |  Max: %d  |  Avg: %.1f",
+            getRollCount(), getMin(), getMax(), getAverage());
+    }
 }
