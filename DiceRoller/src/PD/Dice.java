@@ -1,105 +1,75 @@
 package PD;
-import java.util.Random;
-/**
-* Dice is a Class that represents the faces 
-* 
-* @package PD
-* @author(PraiseManzi) 
-*/
 
-public class Dice 
-{
+import java.util.Random;
+
+/**
+ * Dice represents a single die with a configurable number of faces.
+ * Supports standard rolling and exploding dice (re-roll on max face).
+ *
+ * @author PraiseManzi
+ */
+public class Dice {
+
 	private int numberOfFaces;
 	private int currentFace;
 	private Random randomGen;
-	/**
-     * Constructor for initialising a Dice object with a specified number of faces.
-     *
-     * @param numberOfFaces The number of faces on the die.
-     */
-	public Dice(int numberOfFaces)
-	{
-		this.numberOfFaces=numberOfFaces;
-		randomGen=new Random();
+
+	public Dice(int numberOfFaces) {
+		this.numberOfFaces = numberOfFaces;
+		randomGen = new Random();
 	}
-	 /**
-     * Retrieves the number of faces on the die.
-     *
-     * @return The number of faces on the die.
-     */
-	public int getNumberOfFaces() 
-	{
+
+	public int getNumberOfFaces() {
 		return numberOfFaces;
 	}
-	/**
-     * Sets the number of faces on the die.
-     *
-     * @param numberOfFaces The new number of faces to set.
-     * @throws numberOfFaceRangeException If the provided number of faces is less than or equal to zero.
-     */
-	public void setNumberOfFaces(int numberOfFaces)throws FaceRangeException 
-	{
-		if(numberOfFaces<=0)
-		{
-			FaceRangeException exception= new FaceRangeException(" Number of faces must be greater than zero");
-			throw exception;
+
+	public void setNumberOfFaces(int numberOfFaces) throws FaceRangeException {
+		if (numberOfFaces <= 0) {
+			throw new FaceRangeException("Number of faces must be greater than zero");
 		}
-		else
-			this.numberOfFaces = numberOfFaces;
+		this.numberOfFaces = numberOfFaces;
 	}
-	 /**
-     * Retrieves the current face of the die.
-     *
-     * @return The current face of the die.
-     */
-	public int getCurrentFace() 
-	{
+
+	public int getCurrentFace() {
 		return currentFace;
 	}
-	/**
-     * Sets the current face of the die.
-     *
-     * @param currentFace The new current face to set.
-     */
-	public void setCurrentFace(int currentFace) 
-	{
+
+	public void setCurrentFace(int currentFace) {
 		this.currentFace = currentFace;
 	}
-	/**
-     * Retrieves the currently set random number generator.
-     *
-     * @return The Random object representing the current random number generator.
-     */
-	public Random getRandom()
-	{
+
+	public Random getRandom() {
 		return randomGen;
 	}
-	/**
-	 * Sets the random number generator to be used by this class.
-	 * 
-	 * @param randomGen The Random object to set as the random number generator.
-	 */
-	public void setRandom(Random randomGen)
-	{
-		this.randomGen=randomGen;
+
+	public void setRandom(Random randomGen) {
+		this.randomGen = randomGen;
 	}
-	/**
-	 * Simulates rolling a multi-sided die and returns the result.
-	 * 
-	 * @return The randomly generated integer representing the face of the die rolled.
-	 */
-	public int roll()
-	{
-		return currentFace=randomGen.nextInt(numberOfFaces)+1;
+
+	public int roll() {
+		currentFace = randomGen.nextInt(numberOfFaces) + 1;
+		return currentFace;
 	}
+
 	/**
-     * Returns a string representation of the current face of the die.
-     *
-     * @return A string representation of the current face of the die.
-     */
-	public String toString()
-	{
+	 * Exploding dice: if the max face is rolled, roll again and add.
+	 * Capped at maxRerolls to prevent runaway loops.
+	 */
+	public int rollExploding(int maxRerolls) {
+		int total = 0;
+		int rolls = 0;
+		int result;
+		do {
+			result = roll();
+			total += result;
+			rolls++;
+		} while (result == numberOfFaces && rolls <= maxRerolls);
+		currentFace = total;
+		return total;
+	}
+
+	@Override
+	public String toString() {
 		return Integer.toString(currentFace);
 	}
-	
 }

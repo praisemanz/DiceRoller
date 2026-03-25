@@ -1,27 +1,47 @@
 package PD;
-/**
-* DiceBag is a Class that represents a collection of Die 
-* that have the same number of faces.
-* 
-* @package PD
-* @author(PraiseManzi) 
-*/
 
-public class DiceBag
-{
-	// instance variables
+/**
+ * DiceBag represents a collection of dice with the same number of faces,
+ * supporting modifiers, advantage/disadvantage, and exploding dice.
+ *
+ * @author PraiseManzi
+ */
+public class DiceBag {
+
 	private int numberOfFaces;
 	private int numberOfDice;
+	private int modifier;
 	private int total;
-	private Dice dice[];
+	private Dice[] dice;
 
-//default constructor
-	public DiceBag() 
-	{
-		this.setNumberOfFaces(0);
-		this.setNumberOfDice(0);
-		this.setTotal(0);
+	public DiceBag() {
+		this.numberOfFaces = 0;
+		this.numberOfDice = 0;
+		this.modifier = 0;
+		this.total = 0;
 	}
+
+	public DiceBag(int numberOfDice, int numberOfFaces) throws DiceRangeException, FaceRangeException {
+		if (numberOfDice <= 0) {
+			throw new DiceRangeException("Number of dice must be greater than zero");
+		}
+		if (numberOfFaces <= 0) {
+			throw new FaceRangeException("Number of faces must be greater than zero");
+		}
+		this.numberOfDice = numberOfDice;
+		this.numberOfFaces = numberOfFaces;
+		this.modifier = 0;
+		dice = new Dice[numberOfDice];
+		for (int i = 0; i < numberOfDice; i++) {
+			dice[i] = new Dice(numberOfFaces);
+		}
+	}
+
+	public DiceBag(int numberOfDice, int numberOfFaces, int modifier) throws DiceRangeException, FaceRangeException {
+		this(numberOfDice, numberOfFaces);
+		this.modifier = modifier;
+	}
+
 	public int getTotal() {
 		return total;
 	}
@@ -30,8 +50,7 @@ public class DiceBag
 		this.total = total;
 	}
 
-	public int getNumberOfDice()
-	{
+	public int getNumberOfDice() {
 		return numberOfDice;
 	}
 
@@ -43,84 +62,112 @@ public class DiceBag
 		return numberOfFaces;
 	}
 
-	public void setNumberOfFaces(int numberOfFaces)
-	{
+	public void setNumberOfFaces(int numberOfFaces) {
 		this.numberOfFaces = numberOfFaces;
 	}
-	 // Getters and setters for instance variables
-    // ...
 
-    /**
-     * Constructor for creating a DiceBag with a specified number of dice and faces on each die.
-     *
-     * @param numberOfDice   The number of dice to include in the bag.
-     * @param numberOfFaces  The number of faces on each die.
-     * @throws numberOfDiceRangeExcpetion If the number of dice is less than or equal to zero.
-     * @throws numberOfFaceRangeException If the number of faces on each die is less than or equal to zero.
-     */
-	public DiceBag(int numberOfDice,int numberOfFaces)throws DiceRangeException, FaceRangeException
-	{	
-		if(numberOfDice<=0)
-		{
-			DiceRangeException exception= new DiceRangeException(" Number of dice must be greater than zero ");
-			throw exception;
-		}
-		else
-		{
-			this.numberOfDice= numberOfDice;
-			
-			dice =new Dice[numberOfDice];
-			for(int i=0;i<numberOfDice;i++)
-			{
-				dice[i]= new Dice(numberOfFaces);
-			}
-		}
-		if(numberOfFaces<=0)
-		{
-			FaceRangeException exception= new FaceRangeException(" Number of faces must be greater than zero ");
-			throw exception;
-		}
-		else
-		{
-			this.numberOfFaces= numberOfFaces;
-			
-			dice =new Dice[numberOfFaces];
-			for(int i=0;i<numberOfFaces;i++)
-			{
-				dice[i]= new Dice(numberOfFaces);
-			}
-		}
+	public int getModifier() {
+		return modifier;
 	}
-	 /**
-     * Rolls all the dice in the bag and calculates the total sum of their face values.
-     *
-     * @return The total sum of face values rolled.
-     */
-	public int rollDice()
-	{
-		int total = 0;
-		for( int i=0;i<numberOfDice;i++)
-		{
-			total+= dice[i].roll();
+
+	public void setModifier(int modifier) {
+		this.modifier = modifier;
+	}
+
+	public int[] getDieValues() {
+		if (dice == null) return new int[0];
+		int[] values = new int[numberOfDice];
+		for (int i = 0; i < numberOfDice; i++) {
+			values[i] = dice[i].getCurrentFace();
 		}
-		this.total=total;
+		return values;
+	}
+
+	public int rollDice() {
+		int sum = 0;
+		for (int i = 0; i < numberOfDice; i++) {
+			sum += dice[i].roll();
+		}
+		this.total = sum + modifier;
 		return total;
 	}
-	/**
-     * Returns a string representation of the total sum and face values of the rolled dice in the bag.
-     *
-     * @return A string containing the total sum and individual face values of the dice.
-     */
-	public String toString()
-	{
-		String value;
-		value=" the total is: "+ Integer.toString(total);
-		for(int i=0;i<numberOfDice;i++)
-		{
-			value=value+" The face: "+ dice[i].toString()+" ";
+
+	public int rollDiceExploding() {
+		int sum = 0;
+		for (int i = 0; i < numberOfDice; i++) {
+			sum += dice[i].rollExploding(10);
 		}
-		return value;
+		this.total = sum + modifier;
+		return total;
 	}
-	
+
+	/**
+	 * Roll twice, keep the higher total.
+	 * @return [chosen_total, discarded_total]
+	 */
+	public int[] rollWithAdvantage() {
+		int roll1 = rollDice();
+		int[] values1 = getDieValues().clone();
+
+		int roll2 = rollDice();
+
+		if (roll1 >= roll2) {
+			for (int i = 0; i < numberOfDice; i++) {
+				dice[i].setCurrentFace(values1[i]);
+			}
+			total = roll1;
+			return new int[]{roll1, roll2};
+		} else {
+			total = roll2;
+			return new int[]{roll2, roll1};
+		}
+	}
+
+	/**
+	 * Roll twice, keep the lower total.
+	 * @return [chosen_total, discarded_total]
+	 */
+	public int[] rollWithDisadvantage() {
+		int roll1 = rollDice();
+		int[] values1 = getDieValues().clone();
+
+		int roll2 = rollDice();
+
+		if (roll1 <= roll2) {
+			for (int i = 0; i < numberOfDice; i++) {
+				dice[i].setCurrentFace(values1[i]);
+			}
+			total = roll1;
+			return new int[]{roll1, roll2};
+		} else {
+			total = roll2;
+			return new int[]{roll2, roll1};
+		}
+	}
+
+	public String getNotation() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(numberOfDice).append("d").append(numberOfFaces);
+		if (modifier > 0) sb.append("+").append(modifier);
+		else if (modifier < 0) sb.append(modifier);
+		return sb.toString();
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Total: ").append(total);
+		if (dice != null) {
+			sb.append(" [");
+			for (int i = 0; i < numberOfDice; i++) {
+				if (i > 0) sb.append(", ");
+				sb.append(dice[i].getCurrentFace());
+			}
+			sb.append("]");
+		}
+		if (modifier != 0) {
+			sb.append(modifier > 0 ? " +" : " ").append(modifier);
+		}
+		return sb.toString();
+	}
 }
-	
